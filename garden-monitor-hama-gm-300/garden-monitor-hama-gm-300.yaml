@@ -83,6 +83,7 @@ remote_receiver:
   pin: D5
   filter: 250us
   idle: 5ms
+  buffer_size: 512 # workaround for https://github.com/esphome/issues/issues/4698
   on_raw:
     then:
       - lambda: |-
