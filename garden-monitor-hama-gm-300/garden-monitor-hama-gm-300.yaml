@@ -1,0 +1,168 @@
+#
+# garden-monitor-hama-gm-300.yaml -- ESPhome config to read HAMA GM-300 garden monitor via 433Mhz
+#
+# (C) 2023 Hajo Noerenberg
+#
+# Usage: Connect RXB8 433Mhz remote receiver data pin to D5
+#
+# http://www.noerenberg.de/
+# https://github.com/hn/esphome-configs
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3.0 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+#
+
+esphome:
+  name: garden-monitor-hama-gm-300
+  friendly_name: Garden monitor HAMA GM-300
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Garden-Monitor Fallback Hotspot"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+packages:
+  c1_sensor: !include
+    file: common/garden-monitor-hama-gm-300-sensor.yaml
+    vars:
+      channel: 1
+      desc: Pink orchid
+  c2_sensor: !include
+    file: common/garden-monitor-hama-gm-300-sensor.yaml
+    vars:
+      channel: 2
+      desc: Lime tree
+  c3_sensor: !include
+    file: common/garden-monitor-hama-gm-300-sensor.yaml
+    vars:
+      channel: 3
+      desc: Calla flower
+  c4_sensor: !include
+    file: common/garden-monitor-hama-gm-300-sensor.yaml
+    vars:
+      channel: 4
+      desc: Amaryllis
+  c5_sensor: !include
+    file: common/garden-monitor-hama-gm-300-sensor.yaml
+    vars:
+      channel: 5
+      desc: Sunflower
+
+# Connect RXB8 433Mhz remote receiver data pin to D5
+remote_receiver:
+  pin: D5
+  filter: 250us
+  idle: 5ms
+  on_raw:
+    then:
+      - lambda: |-
+          uint64_t out_code;
+          uint8_t out_nbits;
+          uint8_t tolerance = 20;
+          auto protocol = new remote_base::RCSwitchBase(500, 6000, 500, 1000, 500, 2000, false);
+          auto rrdata = new remote_base::RemoteReceiveData(&x, tolerance);
+          bool out_res = protocol->decode(*rrdata, &out_code, &out_nbits);
+          delete rrdata;
+          delete protocol;
+          if (!out_res || out_nbits < 3) return;
+          ESP_LOGD("rc_switch custom", "Received %d bit code 0x%llx", out_nbits, out_code);
+          //
+          // crc-check, reverse bits and interpret received data for HAMA HAMA GM-300 garden monitor
+          if (out_nbits != 64) return;
+          uint8_t crc = 0xff;
+          for (uint8_t i = 8 * 7; i; i -= 8) {
+            crc ^= out_code >> i;
+            for (uint8_t j = 0; j < 8; j++) {
+              crc = crc & 0x80 ? (crc << 1) ^ 0x31 : crc << 1;
+            }
+          }
+          if (crc != (uint8_t) out_code) return;
+          uint64_t value = 0;
+          for (uint8_t i = 0; i < out_nbits; i++) {
+            if (out_code & (1ULL << i)) value |= (1ULL << (out_nbits - 1 - i));
+          }
+          //
+          uint16_t randomid = value & 0b111111111111;
+          bool forced_send = value >> 15 & 0b1;
+          bool battery_low = value >> 16 & 0b1;
+          uint8_t moisture = value >> 17 & 0b11;
+          int16_t soil_temperature = value >> 20 & 0b111111111111;
+          if (soil_temperature & 0b100000000000) soil_temperature |= 0b1111000000000000;
+          int16_t air_temperature = value >> 32 & 0b111111111111;
+          if (air_temperature & 0b100000000000) air_temperature |= 0b1111000000000000;
+          //
+          // uuhhh, oohhh, this is ugly ...
+          switch(1 + (uint8_t)(value >> 12 & 0b111)) {
+            case 1:
+              id(gm300_c1_randomid).publish_state(randomid);
+              id(gm300_c1_forced_send).publish_state(forced_send);
+              id(gm300_c1_battery_low).publish_state(battery_low);
+              id(gm300_c1_moisture).publish_state(moisture);
+              id(gm300_c1_soil_temperature).publish_state(soil_temperature);
+              id(gm300_c1_air_temperature).publish_state(air_temperature);
+              break;
+            case 2:
+              id(gm300_c2_randomid).publish_state(randomid);
+              id(gm300_c2_forced_send).publish_state(forced_send);
+              id(gm300_c2_battery_low).publish_state(battery_low);
+              id(gm300_c2_moisture).publish_state(moisture);
+              id(gm300_c2_soil_temperature).publish_state(soil_temperature);
+              id(gm300_c2_air_temperature).publish_state(air_temperature);
+              break;
+            case 3:
+              id(gm300_c3_randomid).publish_state(randomid);
+              id(gm300_c3_forced_send).publish_state(forced_send);
+              id(gm300_c3_battery_low).publish_state(battery_low);
+              id(gm300_c3_moisture).publish_state(moisture);
+              id(gm300_c3_soil_temperature).publish_state(soil_temperature);
+              id(gm300_c3_air_temperature).publish_state(air_temperature);
+              break;
+            case 4:
+              id(gm300_c4_randomid).publish_state(randomid);
+              id(gm300_c4_forced_send).publish_state(forced_send);
+              id(gm300_c4_battery_low).publish_state(battery_low);
+              id(gm300_c4_moisture).publish_state(moisture);
+              id(gm300_c4_soil_temperature).publish_state(soil_temperature);
+              id(gm300_c4_air_temperature).publish_state(air_temperature);
+              break;
+            case 5:
+              id(gm300_c5_randomid).publish_state(randomid);
+              id(gm300_c5_forced_send).publish_state(forced_send);
+              id(gm300_c5_battery_low).publish_state(battery_low);
+              id(gm300_c5_moisture).publish_state(moisture);
+              id(gm300_c5_soil_temperature).publish_state(soil_temperature);
+              id(gm300_c5_air_temperature).publish_state(air_temperature);
+              break;
+          }
+
+          return;

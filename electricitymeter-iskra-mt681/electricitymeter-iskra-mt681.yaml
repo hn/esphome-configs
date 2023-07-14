@@ -1,0 +1,207 @@
+#
+# electricitymeter-iskra-mt681.yaml -- ESPhome config to read ISKRA MT681 via IR/SML
+#
+# (C) 2023 Hajo Noerenberg
+#
+# Usage: Connect IR receiver to pin D5
+#
+# http://www.noerenberg.de/
+# https://github.com/hn/esphome-configs
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3.0 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+#
+
+esphome:
+  name: electricitymeter-iskra-mt681
+  friendly_name: Electricity Meter ISKRA MT681
+
+esp8266:
+  board: d1_mini
+
+substitutions:
+  throttle_time: "42s"
+  sml_server_id: "123456789ABCDEF"
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Electricitymeter Fallback Hotspot"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+uart:
+  id: uart_bus
+  rx_pin: D5
+  baud_rate: 9600
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+
+sml:
+  id: ir_sml
+  uart_id: uart_bus
+
+sensor:
+  - platform: sml
+    name: "Bezug, tariflos"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:1.8.0"
+    unit_of_measurement: Wh
+    accuracy_decimals: 1
+    device_class: energy
+    state_class: total_increasing
+    filters:
+      - multiply: 0.1
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Bezug, Tarif 1"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:1.8.1"
+    unit_of_measurement: Wh
+    accuracy_decimals: 1
+    device_class: energy
+    state_class: total_increasing
+    filters:
+      - multiply: 0.1
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Bezug, Tarif 2"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:1.8.1"
+    unit_of_measurement: Wh
+    accuracy_decimals: 1
+    device_class: energy
+    state_class: total_increasing
+    filters:
+      - multiply: 0.1
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Einspeisung, tariflos"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:2.8.0"
+    unit_of_measurement: Wh
+    accuracy_decimals: 1
+    device_class: energy
+    state_class: total_increasing
+    filters:
+      - multiply: 0.1
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Einspeisung, Tarif 1"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:2.8.1"
+    unit_of_measurement: Wh
+    accuracy_decimals: 1
+    device_class: energy
+    state_class: total_increasing
+    filters:
+      - multiply: 0.1
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Einspeisung, Tarif 2"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:2.8.2"
+    unit_of_measurement: Wh
+    accuracy_decimals: 1
+    device_class: energy
+    state_class: total_increasing
+    filters:
+      - multiply: 0.1
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Wirkleistung gesamt"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:16.7.0"
+    unit_of_measurement: W
+    accuracy_decimals: 0
+    device_class: power
+    state_class: measurement
+    filters:
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Wirkleistung L1"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:36.7.0"
+    unit_of_measurement: W
+    accuracy_decimals: 0
+    device_class: power
+    state_class: measurement
+    filters:
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Wirkleistung L2"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:56.7.0"
+    unit_of_measurement: W
+    accuracy_decimals: 0
+    device_class: power
+    state_class: measurement
+    filters:
+      - throttle: ${throttle_time}
+  - platform: sml
+    name: "Wirkleistung L3"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "1-0:76.7.0"
+    unit_of_measurement: W
+    accuracy_decimals: 0
+    device_class: power
+    state_class: measurement
+    filters:
+      - throttle: ${throttle_time}
+
+text_sensor:
+  - platform: sml
+    name: "Manufacturer"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "129-129:199.130.3"
+    format: text
+    entity_category: diagnostic
+    icon: mdi:factory
+  - platform: sml
+    name: "Public Key"
+    sml_id: ir_sml
+    #server_id: ${sml_server_id}
+    obis_code: "129-129:199.130.5"
+    format: text
+    entity_category: diagnostic
+    icon: mdi:numeric
+    filters:
+      - lambda: |-
+          std::string hexstr = format_hex_pretty((uint8_t *) x.c_str(), x.size());
+          replace(hexstr.begin(), hexstr.end(), '.', ' ');
+          return hexstr;

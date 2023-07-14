@@ -1,0 +1,150 @@
+#
+# rainsensor-tfa-kw-9015r.yaml -- ESPhome config to read TFA KW-9015R rain sensor via 433Mhz
+#
+# (C) 2023 Hajo Noerenberg
+#
+# Usage: Connect RXB8 433Mhz remote receiver data pin to D5
+#
+# http://www.noerenberg.de/
+# https://github.com/hn/esphome-configs
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3.0 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+#
+
+esphome:
+  name: rainsensor-tfa-kw-9015r
+  friendly_name: Rain sensor TFA KW-9015R
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Rainsensor Fallback Hotspot"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+remote_receiver:
+  pin: D5
+  filter: 250us
+  idle: 8ms
+  on_raw:
+    then:
+      - lambda: |-
+          uint64_t out_code;
+          uint8_t out_nbits;
+          uint8_t tolerance = 20;
+          auto protocol = new remote_base::RCSwitchBase(500, 9000, 500, 2000, 500, 4000, false);
+          auto rrdata = new remote_base::RemoteReceiveData(&x, tolerance);
+          bool out_res = protocol->decode(*rrdata, &out_code, &out_nbits);
+          delete rrdata;
+          delete protocol;
+          if (!out_res || out_nbits < 3) return;
+          ESP_LOGD("rc_switch custom", "Received %d bit code 0x%llx", out_nbits, out_code);
+          //
+          // reverse bits, crc-check and interpret received data for TFA KW-9015R rain sensor
+          if (out_nbits != 36) return;
+          uint64_t value = 0;
+          for (uint8_t i = 0; i < out_nbits; i++) {
+            if (out_code & (1ULL << i)) value |= (1ULL << (out_nbits - 1 - i));
+          }
+          uint8_t crc = 0;
+          for (uint8_t j = 0; j < 8; j++) crc += (uint8_t)(value >> (j * 4));
+          if ((crc & 0b1111) != (uint8_t)(value >> 32 & 0b1111)) return;
+          //
+          id(kw9015r_randomid).publish_state((uint8_t)(value & 0b11001111));
+          id(kw9015r_channel).publish_state((uint8_t)(value >> 4 & 0b11));
+          id(kw9015r_battery_low).publish_state((uint8_t)(value >> 8 & 0b1));
+          id(kw9015r_forced_send).publish_state((uint8_t)(value >> 11 & 0b1));
+          id(kw9015r_precipitation).publish_state((uint8_t)(value >> 24 & 0b11111111));
+          int16_t temperature = value >> 12 & 0b111111111111;
+          if (temperature & 0b100000000000) temperature |= 0b1111000000000000;
+          id(kw9015r_temperature).publish_state(temperature);
+          switch((uint8_t)(value >> 9 & 0b11)) {
+            case 0:
+              id(kw9015r_temptend).publish_state("steady");
+              break;
+            case 1:
+              id(kw9015r_temptend).publish_state("falling");
+              break;
+            case 2:
+              id(kw9015r_temptend).publish_state("rising");
+              break;
+          }
+          return;
+
+binary_sensor:
+  - platform: template
+    id: kw9015r_battery_low
+    name: Battery
+    device_class: battery
+    entity_category: diagnostic
+  - platform: template
+    id: kw9015r_forced_send
+    name: Forced send
+    entity_category: diagnostic
+    icon: mdi:gesture-tap-button
+
+sensor:
+  - platform: template
+    id: kw9015r_temperature
+    name: Temperature
+    device_class: temperature
+    state_class: measurement
+    filters:
+      - multiply: 0.1
+  - platform: template
+    id: kw9015r_precipitation
+    name: Precipitation
+    device_class: precipitation
+    state_class: total_increasing
+    unit_of_measurement: mm
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.45
+  - platform: template
+    id: kw9015r_channel
+    name: Channel
+    icon: mdi:alpha-c-box
+    accuracy_decimals: 0
+    entity_category: diagnostic
+  - platform: template
+    id: kw9015r_randomid
+    name: Random boot id
+    icon: mdi:numeric
+    accuracy_decimals: 0
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: template
+    id: kw9015r_temptend
+    name: Temperature tendency
+    icon: mdi:thermometer-lines
+
