@@ -107,10 +107,10 @@ display:
     lambda: |-
       auto red = Color(255, 0, 0);
       auto blue = Color(0, 0, 255);
-      auto s_espt = id(pcf8563_time).now();
-      it.line(4, 25, 4 + 2 * s_espt.second, 25, blue);
+      auto rtc = id(pcf8563_time).now();
+      it.line(4, 25, 4 + 2 * rtc.second, 25, blue);
       it.rectangle(2, 2, 124, 28, red);
-      it.strftime(7, 8, id(roboto), "%Y-%m-%d %H:%M:%S", id(pcf8563_time).now());
+      it.strftime(7, 8, id(roboto), "%Y-%m-%d %H:%M:%S", rtc);
       //it.print(20, 10, id(roboto), "Hello World!");
 
 switch:
