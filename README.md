@@ -10,6 +10,8 @@ A collection of config files to integrate various hardware into [ESPhome](https:
 
 - [HAMA GM-300 garden monitor via 433Mhz wireless](garden-monitor-hama-gm-300/)
 
+- [HUIDU HD-WF2 LED matrix controller](led-matrix-hub75-huidu-wf2/)
+
 - [Ginlong Solis solar inverter via ModBus/RS485, using an ESP8266](https://github.com/hn/ginlong-solis#software-esphome)
 
 - [Ginlong Solis solar inverter, by replacing the firmware of the Solis S3 WiFi stick](https://github.com/hn/ginlong-solis#replacing-the-main-application)

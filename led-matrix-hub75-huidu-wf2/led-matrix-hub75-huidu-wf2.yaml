@@ -1,0 +1,135 @@
+#
+# led-matrix-hub75-huidu-wf2.yaml -- ESPhome config for the HUIDU HD-WF2 LED matrix controller
+#
+# (C) 2023 Hajo Noerenberg
+#
+# Usage: See https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-DMA/issues/433
+#
+# http://www.noerenberg.de/
+# https://github.com/hn/esphome-configs
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3.0 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+#
+
+esphome:
+  name: led-matrix-hub75-huidu-wf2
+  friendly_name: LED matrix Huidu HD-WF2
+  platformio_options:
+    board_build.flash_mode: dio
+    lib_deps:
+      - SPI
+      - Wire
+      - Adafruit BusIO
+      - adafruit/Adafruit GFX Library
+      - https://github.com/TillFleisch/ESP32-HUB75-MatrixPanel-DMA#optional_logging
+
+external_components:
+  - source: github://TillFleisch/ESPHome-HUB75-MatrixDisplayWrapper@main
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "LED Matrix Huidu WF2 Fallback Hotspot"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+i2c:
+  sda: 41
+  scl: 42
+
+time:
+  - platform: pcf8563
+    address: 0x51
+    id: pcf8563_time
+  - platform: homeassistant
+    on_time_sync:
+      then:
+        pcf8563.write_time:
+
+font:
+  # gfonts://family[@weight]
+  - file: "gfonts://Roboto"
+    id: roboto
+    size: 12
+
+display:
+  - platform: matrix_display
+    id: huidu_wf2_x1
+    width: 64
+    height: 32
+    chain_length: 2
+    clock_phase: false
+    R1_pin: 2
+    R2_pin: 3
+    G1_pin: 6
+    G2_pin: 7
+    B1_pin: 10
+    B2_pin: 11
+    A_pin: 39
+    B_pin: 38
+    C_pin: 37
+    D_pin: 36
+    E_pin: 21
+    OE_pin: 35
+    CLK_pin: 34
+    LAT_pin: 33
+    lambda: |-
+      auto red = Color(255, 0, 0);
+      auto blue = Color(0, 0, 255);
+      auto s_espt = id(pcf8563_time).now();
+      it.line(4, 25, 4 + 2 * s_espt.second, 25, blue);
+      it.rectangle(2, 2, 124, 28, red);
+      it.strftime(7, 8, id(roboto), "%Y-%m-%d %H:%M:%S", id(pcf8563_time).now());
+      //it.print(20, 10, id(roboto), "Hello World!");
+
+switch:
+  #- platform: matrix_display_switch
+  #  matrix_id: huidu_wf2_x1
+  #  restore_mode: ALWAYS_ON
+  #  id: matrix_power
+  - platform: gpio
+    id: led_run
+    pin: 40
+
+binary_sensor:
+  - platform: gpio
+    id: test_key
+    pin:
+      number: 17
+      inverted: true
+
+number:
+  - platform: matrix_display_brightness
+    matrix_id: huidu_wf2_x1
+    name: "Brightness"
