@@ -119,6 +119,7 @@ sensor:
     name: Temperature
     device_class: temperature
     state_class: measurement
+    unit_of_measurement: °C
     filters:
       - multiply: 0.1
   - platform: template
