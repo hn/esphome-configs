@@ -40,6 +40,7 @@ sensor:
     name: "${desc}: Soil temperature"
     device_class: temperature
     state_class: measurement
+    unit_of_measurement: °C
     icon: mdi:coolant-temperature
     filters:
       - multiply: 0.1
@@ -48,6 +49,7 @@ sensor:
     name: "${desc}: Air temperature"
     device_class: temperature
     state_class: measurement
+    unit_of_measurement: °C
     icon: mdi:sun-thermometer-outline
     filters:
       - multiply: 0.1
@@ -56,6 +58,7 @@ sensor:
     name: "${desc}: Moisture"
     device_class: moisture
     state_class: measurement
+    unit_of_measurement: "%"
     accuracy_decimals: 2
     filters:
       - multiply: 33.333
