@@ -114,10 +114,10 @@ display:
       //it.print(20, 10, id(roboto), "Hello World!");
 
 switch:
-  #- platform: matrix_display_switch
-  #  matrix_id: huidu_wf2_x1
-  #  restore_mode: ALWAYS_ON
-  #  id: matrix_power
+  - platform: matrix_display_switch
+    matrix_id: huidu_wf2_x1
+    restore_mode: ALWAYS_ON
+    id: matrix_power
   - platform: gpio
     id: led_run
     pin: 40
