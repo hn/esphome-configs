@@ -12,6 +12,8 @@ A collection of config files to integrate various hardware into [ESPhome](https:
 
 - [HUIDU HD-WF2 LED matrix controller](led-matrix-hub75-huidu-wf2/)
 
+- [JSN-SR04T V3.0 ultrasonic range sensor in serial mode](ultrasonic-range-sensor-jsnsr04t30/)
+
 - [Ginlong Solis solar inverter via ModBus/RS485, using an ESP8266](https://github.com/hn/ginlong-solis#software-esphome)
 
 - [Ginlong Solis solar inverter, by replacing the firmware of the Solis S3 WiFi stick](https://github.com/hn/ginlong-solis#replacing-the-main-application)

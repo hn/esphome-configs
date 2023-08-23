@@ -1,0 +1,90 @@
+#
+# ultrasonic-range-sensor-jsnsr04t30.yaml -- ESPhome config to read JSN-SR04T V3.0 in serial mode
+#
+# (C) 2023 Hajo Noerenberg
+#
+# Usage: Connect sensor to pin D5/D6, short-circuit solder jumper M2 to set serial mode
+#
+# http://www.noerenberg.de/
+# https://github.com/hn/esphome-configs
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3.0 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+#
+
+esphome:
+  name: ultrasonic-range-sensor-jsnsr04t30
+  friendly_name: Ultrasonic range sensor JSN-SR04T V3.0
+
+esp8266:
+  board: d1_mini
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Range Sensor Fallback Hotspot"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+uart:
+  id: jsnsrt04t_uart
+  rx_pin: D5
+  tx_pin: D6
+  baud_rate: 9600
+  debug:
+    direction: RX
+    dummy_receiver: true
+    sequence:
+      - lambda: |-
+          if (bytes[0] != 0xFF) return;
+          if ((uint8_t) (bytes[0] + bytes[1] + bytes[2]) != bytes[3]) return;
+          uint16_t d = ( bytes[1] << 8 ) | bytes[2];
+          id(jsnsrt04t_distance).publish_state((d == 0) ? NAN : d);
+          id(jsnsrt04t_avg_distance).publish_state((d == 0) ? NAN : d);
+
+interval:
+  - interval: 1s
+    then:
+      - uart.write: [0x55]
+
+sensor:
+  - platform: template
+    id: jsnsrt04t_distance
+    name: Distance
+    device_class: distance
+    state_class: measurement
+    unit_of_measurement: mm
+    accuracy_decimals: 0
+  - platform: template
+    id: jsnsrt04t_avg_distance
+    name: Average distance
+    device_class: distance
+    state_class: measurement
+    unit_of_measurement: mm
+    accuracy_decimals: 2
+    filters:
+      - throttle_average: 30s
+
