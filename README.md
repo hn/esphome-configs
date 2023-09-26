@@ -14,6 +14,8 @@ A collection of config files to integrate various hardware into [ESPhome](https:
 
 - [JSN-SR04T V3.0 ultrasonic range sensor in serial mode](ultrasonic-range-sensor-jsnsr04t30/)
 
+- [QDY30A RS485 liquid level sensor via ModBus/RS485](liquid-level-sensor-qdy30a/)
+
 - [Ginlong Solis solar inverter via ModBus/RS485, using an ESP8266](https://github.com/hn/ginlong-solis#software-esphome)
 
 - [Ginlong Solis solar inverter, by replacing the firmware of the Solis S3 WiFi stick](https://github.com/hn/ginlong-solis#replacing-the-main-application)
