@@ -27,12 +27,6 @@ esphome:
   friendly_name: LED matrix Huidu HD-WF2
   platformio_options:
     board_build.flash_mode: dio
-    lib_deps:
-      - SPI
-      - Wire
-      - Adafruit BusIO
-      - adafruit/Adafruit GFX Library
-      - https://github.com/TillFleisch/ESP32-HUB75-MatrixPanel-DMA#optional_logging
 
 external_components:
   - source: github://TillFleisch/ESPHome-HUB75-MatrixDisplayWrapper@main
@@ -84,7 +78,7 @@ font:
     size: 12
 
 display:
-  - platform: matrix_display
+  - platform: hub75_matrix_display
     id: huidu_wf2_x1
     width: 64
     height: 32
@@ -114,7 +108,7 @@ display:
       //it.print(20, 10, id(roboto), "Hello World!");
 
 switch:
-  - platform: matrix_display_switch
+  - platform: hub75_matrix_display
     matrix_id: huidu_wf2_x1
     restore_mode: ALWAYS_ON
     id: matrix_power
@@ -130,6 +124,6 @@ binary_sensor:
       inverted: true
 
 number:
-  - platform: matrix_display_brightness
+  - platform: hub75_matrix_display
     matrix_id: huidu_wf2_x1
     name: "Brightness"
