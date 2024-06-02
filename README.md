@@ -13,6 +13,7 @@ A collection of config files to integrate various hardware into [ESPhome](https:
 - [HUIDU HD-WF2 LED matrix controller](led-matrix-hub75-huidu-wf2/)
 
 - [JSN-SR04T V3.0 ultrasonic range sensor in serial mode](ultrasonic-range-sensor-jsnsr04t30/)
+  Superseded by the [JSN-SR04T component](https://esphome.io/components/sensor/jsn_sr04t.html)
 
 - [QDY30A RS485 liquid level sensor via ModBus/RS485](liquid-level-sensor-qdy30a/)
 
