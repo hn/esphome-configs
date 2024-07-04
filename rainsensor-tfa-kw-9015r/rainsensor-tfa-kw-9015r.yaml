@@ -63,7 +63,7 @@ remote_receiver:
           uint8_t out_nbits;
           uint8_t tolerance = 20;
           auto protocol = new remote_base::RCSwitchBase(500, 9000, 500, 2000, 500, 4000, false);
-          auto rrdata = new remote_base::RemoteReceiveData(x, tolerance);
+          auto rrdata = new remote_base::RemoteReceiveData(x, tolerance, remote_base::TOLERANCE_MODE_PERCENTAGE);
           bool out_res = protocol->decode(*rrdata, &out_code, &out_nbits);
           delete rrdata;
           delete protocol;
