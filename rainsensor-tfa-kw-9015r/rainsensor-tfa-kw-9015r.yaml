@@ -88,17 +88,7 @@ remote_receiver:
           int16_t temperature = value >> 12 & 0b111111111111;
           if (temperature & 0b100000000000) temperature |= 0b1111000000000000;
           id(kw9015r_temperature).publish_state(temperature);
-          switch((uint8_t)(value >> 9 & 0b11)) {
-            case 0:
-              id(kw9015r_temptend).publish_state("steady");
-              break;
-            case 1:
-              id(kw9015r_temptend).publish_state("falling");
-              break;
-            case 2:
-              id(kw9015r_temptend).publish_state("rising");
-              break;
-          }
+          id(kw9015r_temptend).publish_state(std::to_string((uint8_t)(value >> 9 & 0b11)));
           return;
 
 binary_sensor:
@@ -149,4 +139,10 @@ text_sensor:
     id: kw9015r_temptend
     name: Temperature tendency
     icon: mdi:thermometer-lines
+    filters:
+      - map:
+        - 0 -> steady
+        - 1 -> falling
+        - 2 -> rising
+        - 3 -> unknown
 
