@@ -19,6 +19,8 @@ Please do me a favor: :thumbsup: If you use any information or code you find her
 - [JSN-SR04T V3.0 ultrasonic range sensor in serial mode](ultrasonic-range-sensor-jsnsr04t30/)
   Superseded by the [JSN-SR04T component](https://esphome.io/components/sensor/jsn_sr04t.html)
 
+- [W2839 Tuya PH ORP water sensor](water-ph-orp-sensor-w2839/)
+
 - [QDY30A RS485 liquid level sensor via ModBus/RS485](liquid-level-sensor-qdy30a/)
 
 - [Ginlong Solis solar inverter via ModBus/RS485, using an ESP8266](https://github.com/hn/ginlong-solis#software-esphome)

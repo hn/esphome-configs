@@ -1,0 +1,157 @@
+#
+# water-ph-orp-w2839.yaml -- ESPHome config to read W2839 Tuya PH ORP sensor
+#
+# (C) 2024 Hajo Noerenberg
+#
+# Usage: Open W2839 case and
+# a.) de-solder CB3S module completely   - or -
+# b.) air-gap RX pin of the CB3S module (water-ph-orp-sensor-w2839-airgap-rx-pin.jpg)
+# to stop the Tuya MCU interfering.
+# WARNING: THE SOLDER PADS WILL TEAR OFF IF YOU PULL TOO HARD!
+# Then use ltchipttool to dump and write flash, see LibreTiny CB3S docs for further info.
+# Re-solder RX (and TX if necessary) pin.
+#
+# http://www.noerenberg.de/
+# https://github.com/hn/esphome-configs
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3.0 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+#
+
+esphome:
+  name: water-ph-orp-w2839
+  friendly_name: PH ORP Water Monitor
+
+bk72xx:
+  board: cb3s
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "PH ORP Sensor Fallback Hotspot"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+tuya:
+
+# Datapoint 101: raw value (value: 01.01.00.00.00.00.01.00.00 (9))
+# Datapoint   8: int value (value: 250)
+# Datapoint 102: int value (value: 350)
+# Datapoint 103: int value (value: 210)
+# Datapoint 106: int value (value: 1170)
+# Datapoint 107: int value (value: 700)
+# Datapoint 108: int value (value: 0)
+# Datapoint 111: int value (value: 0)
+# Datapoint 116: int value (value: 0)
+# Datapoint 121: int value (value: 0)
+# Datapoint 126: int value (value: 997)
+# Datapoint 131: int value (value: 60)
+# Datapoint 132: int value (value: 150)
+# Datapoint 133: int value (value: -2000)
+# Datapoint 136: int value (value: 0)
+# Datapoint 141: int value (value: 0)
+# Product: '{"p":"xxxxxxxxxxxxxxxx","v":"1.0.0","m":2}'
+
+uart:
+  rx_pin: RX1
+  tx_pin: TX1
+  baud_rate: 9600
+
+sensor:
+  - platform: tuya
+    name: Temperature
+    sensor_datapoint: 8
+    state_class: measurement
+    device_class: temperature
+    unit_of_measurement: °C
+    icon: mdi:water-thermometer
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: tuya
+    name: pH
+    sensor_datapoint: 106
+    state_class: measurement
+    icon: mdi:water-percent
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  - platform: tuya
+    name: ORP
+    sensor_datapoint: 131
+    state_class: measurement
+    device_class: voltage
+    unit_of_measurement: mV
+    icon: mdi:water-opacity
+
+number:
+  - platform: tuya
+    name: "pH max"
+    number_datapoint: 107
+    entity_category: config
+    icon: mdi:water-percent
+    min_value: 7.00
+    max_value: 15.00
+    multiply: 100
+    step: 0.1
+    mode: box
+
+  - platform: tuya
+    name: "pH min"
+    number_datapoint: 108
+    entity_category: config
+    icon: mdi:water-percent
+    min_value: 0.00
+    max_value: 7.00
+    multiply: 100
+    step: 0.1
+    mode: box
+
+  - platform: tuya
+    name: "ORP max"
+    number_datapoint: 132
+    entity_category: config
+    device_class: voltage
+    unit_of_measurement: mV
+    icon: mdi:water-opacity
+    min_value: -2000
+    max_value: 2000
+    step: 1
+
+  - platform: tuya
+    name: "ORP min"
+    number_datapoint: 133
+    entity_category: config
+    device_class: voltage
+    unit_of_measurement: mV
+    icon: mdi:water-opacity
+    min_value: -2000
+    max_value: 2000
+    step: 1
+
