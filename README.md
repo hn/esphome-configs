@@ -23,6 +23,8 @@ Please do me a favor: :thumbsup: If you use any information or code you find her
 
 - [QDY30A RS485 liquid level sensor via ModBus/RS485](liquid-level-sensor-qdy30a/)
 
+- [B/S/H/ Bosch Siemens home appliances](https://github.com/hn/bsh-home-appliances)
+
 - [Ginlong Solis solar inverter via ModBus/RS485, using an ESP8266](https://github.com/hn/ginlong-solis#software-esphome)
 
 - [Ginlong Solis solar inverter, by replacing the firmware of the Solis S3 WiFi stick](https://github.com/hn/ginlong-solis#replacing-the-main-application)
