@@ -1,0 +1,351 @@
+#
+# air-quality-zn-mt29.yaml -- ESPHome config to read ZN-MT29 Tuya Air Quality Sensor
+#
+# (C) 2025 Hajo Noerenberg
+#
+# Usage: Open ZN-MT29 case (air-quality-zn-mt29-open-case.jpg) and
+# 1a.) de-solder CBU module completely   - or -
+# 1b.) temporarily remove SMD resistor R18 from PCB
+#      to stop the Tuya MCU interfering.
+# 2.) Connect GND/3v3/RX/TX to CBU MCU (air-quality-zn-mt29-rx-tx.jpg).
+# 3.) Use ltchipttool to dump and write flash, see LibreTiny CBU docs for further info.
+# 4.) Remove cables, re-solder CBU module or R18.
+#
+# http://www.noerenberg.de/
+# https://github.com/hn/esphome-configs
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3.0 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+#
+
+esphome:
+  name: air-quality-zn-mt29
+  friendly_name: Air Quality Monitor ZN-MT29
+  platformio_options:
+    platform_packages:
+      - framework-arduino-api @ https://github.com/hn/ArduinoCore-API#RingBufferSize512
+
+bk72xx:
+  board: cbu
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Air Quality Sensor Hotspot"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+time:
+  - platform: homeassistant
+    id: network_time
+
+uart:
+  rx_pin: RX1
+  tx_pin: TX1
+  baud_rate: 115200
+
+tuya:
+  time_id: network_time
+  on_datapoint_update:
+    - sensor_datapoint: 1
+      datapoint_type: enum
+      then:
+        - text_sensor.template.publish:
+            id: tuya_air_quality_index
+            state: !lambda "return std::to_string(x);"
+
+text_sensor:
+  - platform: template
+    id: tuya_air_quality_index
+    name: Air Quality Index
+    icon: mdi:air-filter
+    filters:
+      - map:
+          - 0 -> Good
+          - 1 -> Moderate
+          - 2 -> Unhealthy
+
+text:
+  - platform: template
+    id: alarm1_text
+    name: Alarm Time 1
+    icon: mdi:alarm
+    min_length: 5
+    max_length: 5
+    mode: text
+    set_action:
+      - number.set:
+          id: alarm1
+          value: !lambda |-
+            unsigned int h, m;
+            if (sscanf(x.c_str(), "%d:%d", &h, &m) == 2)
+              return h * 60 + m;
+            return 0;
+  - platform: template
+    id: alarm2_text
+    name: Alarm Time 2
+    icon: mdi:alarm
+    min_length: 5
+    max_length: 5
+    mode: text
+    set_action:
+      - number.set:
+          id: alarm2
+          value: !lambda |-
+            unsigned int h, m;
+            if (sscanf(x.c_str(), "%d:%d", &h, &m) == 2)
+              return h * 60 + m;
+            return 0;
+  - platform: template
+    id: alarm3_text
+    name: Alarm Time 3
+    icon: mdi:alarm
+    min_length: 5
+    max_length: 5
+    mode: text
+    set_action:
+      - number.set:
+          id: alarm3
+          value: !lambda |-
+            unsigned int h, m;
+            if (sscanf(x.c_str(), "%d:%d", &h, &m) == 2)
+              return h * 60 + m;
+            return 0;
+
+sensor:
+  - platform: tuya
+    sensor_datapoint: 2
+    name: Temperature
+    device_class: temperature
+    unit_of_measurement: "°C"
+  - platform: tuya
+    sensor_datapoint: 3
+    name: Humidity
+    device_class: humidity
+    unit_of_measurement: "%"
+  - platform: tuya
+    sensor_datapoint: 4
+    id: co2
+    name: Carbon Dioxide (CO2)
+    device_class: carbon_dioxide
+    unit_of_measurement: ppm
+  - platform: tuya
+    sensor_datapoint: 5
+    id: hcho
+    name: Formaldehyde (HCHO)
+    unit_of_measurement: mg/m³
+    icon: mdi:flask
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+  - platform: tuya
+    sensor_datapoint: 7
+    id: pm25
+    name: Particulate Matter 2.5µm (PM2.5)
+    device_class: pm25
+    unit_of_measurement: µg/m³
+  - platform: tuya
+    sensor_datapoint: 8
+    id: pm1
+    name: Particulate Matter 1.0µm (PM1.0)
+    device_class: pm1
+    unit_of_measurement: µg/m³
+  - platform: tuya
+    sensor_datapoint: 9
+    id: pm10
+    name: Particulate Matter 10µm (PM10)
+    device_class: pm10
+    unit_of_measurement: µg/m³
+  - platform: tuya
+    sensor_datapoint: 22
+    name: Battery Remaining
+    device_class: battery
+    entity_category: diagnostic
+    unit_of_measurement: "%"
+  - platform: tuya
+    sensor_datapoint: 101
+    id: tvoc
+    name: Volatile Organic Compounds (TVOC)
+    device_class: volatile_organic_compounds
+    unit_of_measurement: mg/m³
+    icon: mdi:chemical-weapon
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.001
+  - platform: tuya
+    sensor_datapoint: 102
+    name: Carbon Monoxide (CO)
+    device_class: carbon_monoxide
+    unit_of_measurement: ppm
+  - platform: tuya
+    sensor_datapoint: 107
+    id: pm03
+    name: Particulate Matter 0.3µm (PM0.3)
+    device_class: pm1 # workaround as there is no pm03 class
+    unit_of_measurement: µg/m³
+
+binary_sensor:
+  - platform: tuya
+    sensor_datapoint: 23
+    name: Battery Charging
+    device_class: battery_charging
+    entity_category: diagnostic
+
+select:
+#  - platform: tuya
+#    enum_datapoint: 28
+#    name: Alarm Volume
+#    entity_category: config
+#    icon: mdi:volume-high
+#    optimistic: true
+#    options:
+#      1: Middle
+#  - platform: tuya
+#    enum_datapoint: 103
+#    name: Backlight Level
+#    entity_category: config
+#    icon: mdi:television-ambient-light
+#    optimistic: true
+#    options:
+#      100: "Level 100"
+  - platform: tuya
+    enum_datapoint: 112
+    name: Temperature Unit
+    entity_category: config
+    icon: mdi:thermometer-lines
+    optimistic: true
+    options:
+      0: °C
+      1: °F
+
+number:
+  - platform: tuya
+    number_datapoint: 104
+    name: Alarm Carbon Dioxide (CO2)
+    device_class: carbon_dioxide
+    unit_of_measurement: ppm
+    entity_category: config
+    mode: box
+    min_value: 500
+    max_value: 3000
+    step: 100
+  - platform: tuya
+    number_datapoint: 105
+    name: Screensaver
+    unit_of_measurement: min
+    entity_category: config
+    icon: mdi:monitor-off
+    mode: box
+    min_value: 0
+    max_value: 100
+    step: 1
+  - platform: tuya
+    number_datapoint: 109
+    id: alarm1
+    min_value: 0
+    max_value: 1440
+    step: 1
+    on_value:
+      then:
+        - lambda: |-
+            char buf[5 + 1];
+            sprintf(buf, "%02d:%02d", (int) x / 60, (int) x % 60);
+            id(alarm1_text).publish_state(std::string(buf));
+  - platform: tuya
+    number_datapoint: 110
+    id: alarm2
+    min_value: 0
+    max_value: 1440
+    step: 1
+    on_value:
+      then:
+        - lambda: |-
+            char buf[5 + 1];
+            sprintf(buf, "%02d:%02d", (int) x / 60, (int) x % 60);
+            id(alarm2_text).publish_state(std::string(buf));
+  - platform: tuya
+    number_datapoint: 111
+    id: alarm3
+    min_value: 0
+    max_value: 1440
+    step: 1
+    on_value:
+      then:
+        - lambda: |-
+            char buf[5 + 1];
+            sprintf(buf, "%02d:%02d", (int) x / 60, (int) x % 60);
+            id(alarm3_text).publish_state(std::string(buf));
+  - platform: tuya
+    number_datapoint: 113
+    name: Alarm Carbon Monoxide (CO)
+    device_class: carbon_monoxide
+    unit_of_measurement: ppm
+    entity_category: config
+    mode: box
+    min_value: 10
+    max_value: 500
+    step: 10
+  - platform: tuya
+    number_datapoint: 114
+    name: Alarm Particulate Matter 2.5µm (PM2.5)
+    device_class: pm25
+    unit_of_measurement: µg/m³
+    entity_category: config
+    mode: box
+    min_value: 50
+    max_value: 300
+    step: 10
+  - platform: tuya
+    number_datapoint: 115
+    name: Alarm Formaldehyde (HCHO)
+    unit_of_measurement: mg/m³
+    icon: mdi:flask
+    entity_category: config
+    mode: box
+    min_value: 8
+    max_value: 199
+    step: 1
+    multiply: 1000
+
+switch:
+  - platform: tuya
+    switch_datapoint: 106
+    name: Acoustic Alarms
+    icon: mdi:volume-high
+  - platform: tuya
+    switch_datapoint: 116
+    name: Alarm 1 Enable
+    icon: mdi:alarm-multiple
+  - platform: tuya
+    switch_datapoint: 117
+    name: Alarm 2 Enable
+    icon: mdi:alarm-multiple
+  - platform: tuya
+    switch_datapoint: 118
+    name: Alarm 3 Enable
+    icon: mdi:alarm-multiple
+
