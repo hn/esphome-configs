@@ -1,0 +1,137 @@
+#
+# watermeter-waterstar-cc1101.yaml -- ESPHome config to read WMBUS watermeter via CC1101 radio 868 Mhz
+#
+# WaterStarM M-ETH Q3 2,5 Water Meter,
+# marketed by: Brummerhoop
+# https://www.brummerhoop.com/media/ce/2a/62/1668505287/1081600001_2019-02-20_ba_waterstar_m_mid_de_en.pdf
+# manufactured by: Lorenz GmbH & Co. KG
+# technical support by: Engelmann Sensor GmbH
+#
+# By factory default, the M-ETH watermeter only sends data during the day from 08:00-18:00.
+#
+# (C) 2025 Hajo Noerenberg
+#
+# Usage: Connect CC1101 'green pcb' radio module to ESP32 via SPI
+#
+# http://www.noerenberg.de/
+# https://github.com/hn/esphome-configs
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3.0 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program. If not, see <http://www.gnu.org/licenses/gpl-3.0.txt>.
+#
+
+esphome:
+  name: watermeter-waterstarm
+  friendly_name: Watermeter WaterStarM
+  platformio_options:
+    board_build.flash_mode: dio
+
+# https://www.sudo.is/docs/esphome/boards/esp32c3supermini/
+esp32:
+  board: esp32-c3-devkitm-1
+  variant: ESP32C3
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "CC1101 Fallback Hotspot"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+external_components:
+  - source: github://SzczepanLeon/esphome-components@main
+    components: [ wmbus ]
+#    refresh: 0d
+
+time:
+  - platform: homeassistant
+
+wmbus:
+  mosi_pin: GPIO6
+  miso_pin: GPIO5
+  clk_pin:  GPIO4
+  cs_pin:   GPIO7
+  gdo0_pin: GPIO10
+  gdo2_pin: GPIO3
+
+  led_pin:
+      number: GPIO8
+      inverted: true
+
+  all_drivers: False
+  log_all: True
+
+sensor:
+  - platform: wmbus
+    meter_id: !secret garden_watermeter_id
+    type: WaterStarM
+    key: !secret garden_watermeter_aes_key
+    sensors:
+      - name: "Total water consumption"
+        field: "total"
+        accuracy_decimals: 3
+        unit_of_measurement: "m³"
+        device_class: "water"
+        state_class: "total_increasing"
+      - id: wmbus_meter_time
+        # name: "WMBUS Meter internal time"
+        field: "meter"
+        unit_of_measurement: "datetime"
+        # device_class: "timestamp" # does not work
+        entity_category: diagnostic
+        on_value:
+            then:
+              - lambda: "id(meter_time).publish_state(x);"
+  - platform: template
+    name: "Meter internal time"
+    id: meter_time
+    device_class: "timestamp"
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: wmbus
+    meter_id: !secret garden_watermeter_id
+    type: WaterStarM
+    key: !secret garden_watermeter_aes_key
+    sensors:
+      - name: "Meter status"
+        field: "status"
+        entity_category: diagnostic
+        icon: mdi:list-status
+        on_value:
+            then:
+              - lambda: |-
+                  // main/components/wmbus/driver_waterstarm.cpp#L55
+                  bool battery_error = (x.find("BATTERY_VOLTAGE_ERROR") != std::string::npos);
+                  id(meter_battery).publish_state(battery_error);
+
+binary_sensor:
+  - platform: template
+    id: meter_battery
+    name: "Meter battery"
+    device_class: battery
+    entity_category: diagnostic

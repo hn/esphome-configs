@@ -21,6 +21,8 @@ Please do me a favor: :thumbsup: If you use any information or code you find her
 
 - [W2839 Tuya PH ORP water sensor](water-ph-orp-sensor-w2839/)
 
+- [M-ETH WaterStarM Brummerhoop Lorenz WMBUS water meter via CC1101 radio module](watermeter-waterstarm/)
+
 - [ZN-MT29 Tuya Air quality sensor](air-quality-zn-mt29/)
 
 - [QDY30A RS485 liquid level sensor via ModBus/RS485](liquid-level-sensor-qdy30a/)
