@@ -111,6 +111,7 @@ sensor:
     id: meter_time
     device_class: "timestamp"
     entity_category: diagnostic
+    accuracy_decimals: 0
 
 text_sensor:
   - platform: wmbus
