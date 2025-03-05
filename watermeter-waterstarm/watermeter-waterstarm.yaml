@@ -113,6 +113,14 @@ sensor:
     entity_category: diagnostic
     accuracy_decimals: 0
 
+# To display the date in Home Assistant in absolute rather than relative format,
+# edit Home Assistant entities card and set 'format' attribute via code editor:
+# https://www.home-assistant.io/dashboards/entities/#attribute
+#
+#   - entity: sensor.watermeter_waterstarm_meter_internal_time
+#    name: Meter internal time
+#    format: datetime
+
 text_sensor:
   - platform: wmbus
     meter_id: !secret garden_watermeter_id
