@@ -63,7 +63,7 @@ wifi:
 captive_portal:
 
 external_components:
-  - source: github://SzczepanLeon/esphome-components@main
+  - source: github://SzczepanLeon/esphome-components@version_4
     components: [ wmbus ]
 #    refresh: 0d
 
