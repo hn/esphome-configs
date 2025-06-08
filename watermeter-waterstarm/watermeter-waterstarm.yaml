@@ -14,6 +14,8 @@
 #
 # Usage: Connect CC1101 'green pcb' radio module to ESP32 via SPI
 #
+# garden_watermeter_id in secrets.yaml has to be prefixed with "0x" (hex number)
+#
 # http://www.noerenberg.de/
 # https://github.com/hn/esphome-configs
 #
