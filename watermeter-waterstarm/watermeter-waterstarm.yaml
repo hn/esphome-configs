@@ -7,7 +7,8 @@
 # manufactured by: Lorenz GmbH & Co. KG
 # technical support by: Engelmann Sensor GmbH
 #
-# By factory default, the M-ETH watermeter only sends data during the day from 08:00-18:00.
+# By factory default, the M-ETH watermeter only sends data during the day from 08:00-18:00,
+# use https://github.com/hn/em-admin to change the settings if needed.
 #
 # (C) 2025 Hajo Noerenberg
 #
