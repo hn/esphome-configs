@@ -140,10 +140,24 @@ text_sensor:
                   // main/components/wmbus/driver_waterstarm.cpp#L55
                   bool battery_error = (x.find("BATTERY_VOLTAGE_ERROR") != std::string::npos);
                   id(meter_battery).publish_state(battery_error);
+                  bool leakage_detected = (x.find("LEAKAGE_OR_NO_USAGE") != std::string::npos);
+                  id(leakage).publish_state(leakage_detected);
+                  bool reverse_flow_detected = (x.find("REVERSE_FLOW") != std::string::npos);
+                  id(reverse_flow).publish_state(reverse_flow_detected);
 
 binary_sensor:
   - platform: template
     id: meter_battery
     name: "Meter battery"
     device_class: battery
+    entity_category: diagnostic
+  - platform: template
+    id: leakage
+    name: "Leakage"
+    device_class: problem
+    entity_category: diagnostic
+  - platform: template
+    id: reverse_flow
+    name: "Reverse flow"
+    device_class: problem
     entity_category: diagnostic
