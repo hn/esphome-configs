@@ -6,6 +6,8 @@ Please do me a favor: :thumbsup: If you use any information or code you find her
 :star: Also, please consider to star this project. I really like to keep track of who is using this to do creative things, especially if you are from other parts of the world.
 :smiley: You are welcome to open an issue to report on your personal success project and share it with others.
 
+- [ISKRA MT631 electricitymeter via infrared](electricitymeter-iskra-mt631/)
+
 - [ISKRA MT681 electricitymeter via infrared](electricitymeter-iskra-mt681/)
 
 - [Itron Openway 3.HZ electricitymeter via infrared](electricitymeter-itron-openway-3hz/)
